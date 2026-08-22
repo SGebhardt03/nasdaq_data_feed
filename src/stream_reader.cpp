@@ -19,10 +19,6 @@ namespace df {
 // and returns complete messages as span.
 //
 // Framing: every message is prefixed with 2-byte big endian length.
-//
-// Lebensdauer: der von next() zurueckgegebene span zeigt in den internen
-// Puffer und wird durch den NAECHSTEN next()-Aufruf ungueltig. Wer Daten
-// ueber den Aufruf hinaus braucht, muss kopieren.
 class StreamReader {
  public:
   static constexpr std::size_t kDefaultCapacity = 1u << 20;  // 1 MiB

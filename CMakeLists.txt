@@ -32,6 +32,9 @@ target_include_directories(feed_core INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/itch)  # stream_reader.cpp: #include "endian.hpp"
 target_link_libraries(feed_core INTERFACE feed_flags ZLIB::ZLIB)
 
+add_executable(itch_stat src/main.cpp)
+target_link_libraries(itch_stat PRIVATE feed_core)
+
 enable_testing()
 
 add_executable(acceptance_stream_reader_100mb
