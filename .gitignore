@@ -1,0 +1,14 @@
+build/
+cmake-build-*/
+
+data/raw/*
+data/sample/*
+data/derived/*
+!data/raw/.gitkeep
+!data/sample/.gitkeep
+!data/derived/.gitkeep
+
+sample_head.gz
+sample_head.itch
+
+tests/fixtures/*
