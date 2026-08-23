@@ -32,7 +32,7 @@ void run_pass(const std::string& path, data_feed::StatsHandler& h) {
 }
 
 void print_type_counts(const data_feed::StatsHandler& h) {
-    std::cout << "Message-Typ  Count\n";
+    std::cout << "Message-type  Count\n";
     for (int t = 0; t < 256; ++t) {
         const auto n = h.counts()[static_cast<std::size_t>(t)];
         if (n == 0) continue;

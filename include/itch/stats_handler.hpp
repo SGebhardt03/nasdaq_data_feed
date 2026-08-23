@@ -37,12 +37,12 @@ public:
         const auto loc = df::read_be<std::uint16_t>(body.subspan(1, 2));
         if (loc >= watch_.size() || !watch_[loc]) return;
         switch (type) {
-            // case 'A': case 'F': on_add_order(body);  break;   // TODO 1.2
-            // case 'E': case 'C': on_executed(body);   break;
-            // case 'X':           on_cancel(body);     break;
-            // case 'D':           on_delete(body);     break;
-            // case 'U':           on_replace(body);    break;
-            // case 'P': case 'Q': on_trade(body);      break;
+            case 'A': case 'F': on_add_order(body);  break;
+            case 'E': case 'C': on_executed(body);   break;
+            case 'X':           on_cancel(body);     break;
+            case 'D':           on_delete(body);     break;
+            case 'U':           on_replace(body);    break;
+            case 'P': case 'Q': on_trade(body);      break;
             default: break;
         }
     }
@@ -70,10 +70,6 @@ public:
     }
 
 private:
-    // 'R' Stock Directory. parse_stock_directory aufrufen, locate_to_ticker_
-    // bei Bedarf auf locate+1 vergroessern (resize, nicht reserve) und den
-    // Ticker ablegen. Kein Filter -- die Tabelle braucht alle Symbole,
-    // nicht nur die der Watchlist.
     void on_stock_directory(std::span<const std::byte> body) {
         const auto sd = parse_stock_directory(body);
         if (sd.locate >= locate_to_ticker_.size())
@@ -81,11 +77,30 @@ private:
         locate_to_ticker_[sd.locate] = sd.stock;
     }
 
-    // TODO 1.2/1.3: on_add_order, on_executed, on_cancel,
-    //               on_delete, on_replace, on_trade
-    //               -- jeweils parse_* aufrufen, Ergebnis vorerst verwerfen.
-    //               Zusaetzlich Min/Max von price und shares mitfuehren:
-    //               absurde Werte verraten einen Offset-Fehler sofort.
+
+    void on_add_order(std::span<const std::byte> body) {
+        const auto order = parse_add_order(body);
+    }
+
+    void on_executed(std::span<const std::byte> body) {
+        const auto executed_order = parse_executed_order(body);
+    }
+
+    void on_cancel(std::span<const std::byte> body) {
+        const auto cancel_order = parse_order_cancel(body);
+    }
+
+    void on_delete(std::span<const std::byte> body) {
+        const auto delete_order = parse_order_delete(body);
+    }
+
+    void on_replace(std::span<const std::byte> body) {
+        const auto replace_order = parse_order_replace(body);
+    }
+
+    void on_trade(std::span<const std::byte> body) {
+        const auto trade_order = parse_trade(body);
+    }
 
 
     bool is_wanted(const Ticker& t) const {

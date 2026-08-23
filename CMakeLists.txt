@@ -37,6 +37,14 @@ target_link_libraries(itch_stat PRIVATE feed_core)
 
 enable_testing()
 
+find_package(GTest REQUIRED)
+include(GoogleTest)
+
+add_executable(unit_tests
+        tests/test_book.cpp)
+target_link_libraries(unit_tests PRIVATE feed_core GTest::gtest GTest::gtest_main)
+gtest_discover_tests(unit_tests)
+
 add_executable(acceptance_stream_reader_100mb
         tests/acceptance_stream_reader_100mb.cpp)
 target_link_libraries(acceptance_stream_reader_100mb PRIVATE feed_core)
@@ -47,3 +55,4 @@ add_test(NAME acceptance_stream_reader_100mb
         COMMAND acceptance_stream_reader_100mb
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/itch_100mb.gz
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/itch_100mb.expected)
+add_executable(feed_tests tests/test_message_parser.cpp)
