@@ -27,6 +27,9 @@ class StreamReader {
   explicit StreamReader(const std::string& path,
                         std::size_t capacity = kDefaultCapacity)
       : buf_(capacity) {
+
+    using_memory_ = false;
+
     if (capacity < kLenPrefix + 1) {
       throw std::invalid_argument("StreamReader: capacity too small");
     }
@@ -35,6 +38,17 @@ class StreamReader {
       throw std::runtime_error("gzopen failed: " + path);
     }
     ::gzbuffer(file_, 1u << 17);  // 128 KiB internal inflate-buffer
+  }
+
+  explicit StreamReader(std::vector<std::byte> data, std::size_t capacity = kDefaultCapacity) : buf_(capacity) {
+    using_memory_ = true;
+
+    if (capacity < kLenPrefix + 1) {
+      throw std::invalid_argument("StreamReader: capacity too small");
+    }
+    mem_source_ = std::move(data);
+
+    file_ = nullptr; // should already be set
   }
 
   ~StreamReader() {
@@ -132,20 +146,36 @@ class StreamReader {
     const std::size_t space = buf_.size() - tail_;
     if (space == 0) return false;  // from next() via total <= capacity covered
 
-    const int got = ::gzread(file_, buf_.data() + tail_,
-                             static_cast<unsigned>(space));
-    if (got < 0) {
-      int err = 0;
-      const char* msg = ::gzerror(file_, &err);
-      throw std::runtime_error(std::string("gzread failed: ") +
-                               (msg != nullptr ? msg : "unknown"));
+    if (using_memory_ == false) {
+      const int got = ::gzread(file_, buf_.data() + tail_,
+                               static_cast<unsigned>(space));
+      if (got < 0) {
+        int err = 0;
+        const char* msg = ::gzerror(file_, &err);
+        throw std::runtime_error(std::string("gzread failed: ") +
+                                 (msg != nullptr ? msg : "unknown"));
+      }
+      if (got == 0) {
+        eof_ = true;
+        return false;
+      }
+      tail_ += static_cast<std::size_t>(got);
+      return true;
     }
-    if (got == 0) {
-      eof_ = true;
-      return false;
+    else {
+      const std::size_t rest = mem_source_.size() - mem_pos_;
+      const std::size_t to_copy = std::min(space, rest);
+      std::memcpy(buf_.data() + tail_, mem_source_.data() + mem_pos_, to_copy);
+      mem_pos_ += to_copy;
+      const int got = static_cast<int>(to_copy);
+
+      if (got == 0) {
+        eof_ = true;
+        return false;
+      }
+      tail_ += static_cast<std::size_t>(got);
+      return true;
     }
-    tail_ += static_cast<std::size_t>(got);
-    return true;
   }
 
   gzFile file_ = nullptr;
@@ -154,6 +184,10 @@ class StreamReader {
   std::size_t tail_ = 0;  // end of valid data
   std::uint64_t consumed_ = 0;
   bool eof_ = false;
+
+  std::vector<std::byte> mem_source_;
+  std::size_t mem_pos_ = 0;
+  bool using_memory_ = false;
 };
 
 }  // namespace df
