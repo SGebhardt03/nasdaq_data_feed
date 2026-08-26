@@ -41,7 +41,9 @@ find_package(GTest REQUIRED)
 include(GoogleTest)
 
 add_executable(unit_tests
-        tests/test_book.cpp)
+        tests/test_book.cpp
+        tests/test_buffer_boundary.cpp
+        tests/test_message_parser.cpp)
 target_link_libraries(unit_tests PRIVATE feed_core GTest::gtest GTest::gtest_main)
 gtest_discover_tests(unit_tests)
 
@@ -55,4 +57,3 @@ add_test(NAME acceptance_stream_reader_100mb
         COMMAND acceptance_stream_reader_100mb
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/itch_100mb.gz
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/itch_100mb.expected)
-add_executable(feed_tests tests/test_message_parser.cpp)

@@ -3,7 +3,7 @@
 // nach Watchlist) eine Message-Typ -> Count Tabelle.
 
 #include "itch/stats_handler.hpp"
-#include "stream_reader.cpp"
+#include "../include/itch/stream_reader.hpp"
 
 #include <iostream>
 #include <stdexcept>

@@ -12,7 +12,7 @@
 // Exit 2 = falscher Aufruf.
 
 #include "itch/endian.hpp"
-#include "stream_reader.cpp"
+#include "../include/itch/stream_reader.hpp"
 
 #include <chrono>
 #include <cstdint>
