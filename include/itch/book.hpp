@@ -177,7 +177,7 @@ namespace data_feed {
             auto&[price, shares, locate, side] = it->second;
 
             auto& book = books_[locate];
-            if (side == data_feed::Side::Buy) {
+            if (side == Side::Buy) {
                 decrement_level(book.bids, price, shares);
             } else {
                 decrement_level(book.asks, price, shares);
