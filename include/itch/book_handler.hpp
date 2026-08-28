@@ -1,0 +1,8 @@
+//
+// Created by samuel-gebhardt on 28.08.26.
+//
+
+#ifndef FEEDHANDLER_BOOKHANDLER_HPP
+#define FEEDHANDLER_BOOKHANDLER_HPP
+
+#endif //FEEDHANDLER_BOOKHANDLER_HPP

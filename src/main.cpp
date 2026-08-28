@@ -2,6 +2,7 @@
 // ermittelt mit StatsHandler in zwei Durchlaufen (Directory, dann gefiltert
 // nach Watchlist) eine Message-Typ -> Count Tabelle.
 
+#include "itch/dispatch.hpp"
 #include "itch/stats_handler.hpp"
 #include "../include/itch/stream_reader.hpp"
 
@@ -11,25 +12,7 @@
 
 namespace {
 
-// Liest die Datei einmal komplett per StreamReader und speist jede
-// Nachricht in den Handler ein. Eine Dev-Sample-Datei (z. B.
-// data/sample/head100mb.gz) ist per Konstruktion mitten im gzip-Stream
-// abgeschnitten -- StreamReader wirft dann beim letzten, unvollstaendigen
-// Frame. Das ist hier kein Fehler, sondern das erwartete Ende der Probe.
-void run_pass(const std::string& path, data_feed::StatsHandler& h) {
-    df::StreamReader reader(path);
-    try {
-        for (;;) {
-            const auto msg = reader.next();
-            if (msg.empty()) break;
-            h.on_message(msg);
-        }
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Hinweis: " << e.what()
-                  << " -- vermutlich abgeschnittene Dev-Sample-Datei; "
-                     "Statistik basiert auf den bis dahin gelesenen Nachrichten.\n";
-    }
-}
+
 
 void print_type_counts(const data_feed::StatsHandler& h) {
     std::cout << "Message-type  Count\n";
