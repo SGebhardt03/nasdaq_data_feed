@@ -63,6 +63,7 @@ namespace data_feed {
         uint64_t underflow_clamped  = 0; // reduce by more shares than quoted
         uint64_t level_missing      = 0; // order exists, price level does not
         uint64_t book_desync        = 0;
+        uint64_t zero_shares        = 0;
     };
 
     class BookEngine {
@@ -78,10 +79,12 @@ namespace data_feed {
         BookEngine(BookEngine&&) = default;
         BookEngine& operator=(BookEngine&&) = default;
 
-
-        // TODO: Optimize hash lookups
+        // Messages A, F
         void add_order(const uint64_t ref, const uint16_t locate, const Side side,
                        const int64_t price, const uint32_t shares) {
+
+            if (shares == 0) [[unlikely]] { ++stats_.zero_shares; return; }
+
             if (auto [it, inserted] = orders_.try_emplace(ref, Order{.price = price, .shares = shares, .locate = locate, .side = side}); !inserted) {
                 ++stats_.duplicate_ref;
                 return;
@@ -96,7 +99,7 @@ namespace data_feed {
             }
         }
 
-
+        // Messages X, E, C
         void reduce_order(const uint64_t ref, const uint32_t shares) {
 
             const auto it = orders_.find(ref);
@@ -110,11 +113,11 @@ namespace data_feed {
             if (shares < order.shares) {
                 order.shares -= shares;
             } else if (shares == order.shares) {
-                delete_order(ref);
+                remove_order(it);
                 return;
             } else {
                 stats_.underflow_clamped++;
-                delete_order(ref);
+                remove_order(it); // implicit clamping using order.shares
                 return;
             }
 
@@ -127,6 +130,8 @@ namespace data_feed {
 
         }
 
+
+        // Messages D
         void delete_order(const uint64_t ref) {
             const auto it = orders_.find(ref);
             if (it == orders_.end()) {
@@ -134,18 +139,10 @@ namespace data_feed {
                 return;
             }
 
-            auto&[price, shares, locate, side] = it->second;
-
-            auto& book = books_[locate];
-            if (side == data_feed::Side::Buy) {
-                decrement_level(book.bids, price, shares);
-            } else {
-                decrement_level(book.asks, price, shares);
-            }
-
-            orders_.erase(ref);
+            remove_order(it);
         }
 
+        // Messages U
         void replace_order(const uint64_t old_ref, const uint64_t new_ref,
                            const int64_t new_price, const uint32_t new_shares) {
 
@@ -159,7 +156,7 @@ namespace data_feed {
 
             const auto side = order.side;
             const auto locate = order.locate;
-            delete_order(old_ref);
+            remove_order(it);
             add_order(new_ref, locate, side, new_price, new_shares);
         }
     private:
@@ -176,7 +173,18 @@ namespace data_feed {
             lit->second -= shares;
         }
 
-        // TODO: implement to reduce hash lookups
-        void remove_order(std::unordered_map<uint64_t, Order>::iterator it, uint32_t shares);
+        void remove_order(const std::unordered_map<uint64_t, Order>::iterator it) {
+            auto&[price, shares, locate, side] = it->second;
+
+            auto& book = books_[locate];
+            if (side == data_feed::Side::Buy) {
+                decrement_level(book.bids, price, shares);
+            } else {
+                decrement_level(book.asks, price, shares);
+            }
+
+            orders_.erase(it);
+        }
+
     };
 }
