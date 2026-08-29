@@ -278,8 +278,8 @@ namespace data_feed {
         std::uint16_t tracking;
         std::uint64_t old_order_reference_number;
         std::uint64_t new_order_reference_number;
-        std::uint64_t shares;
-        std::uint64_t price;
+        std::uint32_t shares;
+        std::int64_t price;
     };
 
     inline OrderReplace parse_order_replace(std::span<const std::byte> b) {

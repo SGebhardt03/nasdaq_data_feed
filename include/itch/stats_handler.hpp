@@ -81,7 +81,7 @@ public:
 
 private:
 
-    bool is_wanted(const Ticker& t) const {
+    [[nodiscard]] bool is_wanted(const Ticker& t) const {
         const std::string_view sv = trim(t);
         for (const auto& w : wanted_)
             if (w == sv) return true;

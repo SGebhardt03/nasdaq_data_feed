@@ -100,7 +100,7 @@ namespace data_feed {
         }
 
         // Messages X, E, C
-        void reduce_order(const uint64_t ref, const uint32_t shares) {
+        void reduce_order(const uint64_t ref, const uint64_t shares) {
 
             const auto it = orders_.find(ref);
             if (it == orders_.end()) {
