@@ -63,7 +63,7 @@ void run_book(const std::string& path) {
 
 int main(int argc, char** argv) {
     const std::string mode = argc > 1 ? argv[1] : "stats";
-    const std::string path = argc > 2 ? argv[2] : "data/sample/head100mb.gz";
+    const std::string path = argc > 2 ? argv[2] : "data/raw/S112825-v50.txt.gz";
 
     if (mode != "stats" && mode != "book") {
         std::cerr << "Aufruf: " << argv[0] << " [stats|book] [pfad]\n";
