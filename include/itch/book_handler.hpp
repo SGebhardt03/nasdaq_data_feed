@@ -24,7 +24,15 @@ namespace data_feed {
 
     class BookHandler : public HandlerDefaults {
     public:
-        explicit BookHandler(std::vector<std::uint8_t> watch) : watch_(std::move(watch)) {}
+        explicit BookHandler(std::vector<std::string> watchlist)
+    : wanted_(std::move(watchlist)) {}
+
+        void finalize_directory() {
+            watch_.assign(locate_to_ticker_.size(), 0);
+            for (std::size_t i = 0; i < locate_to_ticker_.size(); ++i)
+                watch_[i] = static_cast<std::uint8_t>(is_wanted(locate_to_ticker_[i]));
+            directory_ready_ = true;
+        }
 
         void on_add_order(const std::span<const std::byte> body) {
             const auto order = parse_add_order(body);
@@ -59,12 +67,20 @@ namespace data_feed {
                 replace_order.shares);
         }
 
+        void after_message() {
+            for (const std::uint8_t& w : watch_) {
+                const Book& book = engine_.read_book(w);
+                engine_.check_crossed(book);
+            }
+
+        }
+
         void on_trading_action(const std::span<const std::byte> body) {
             const auto system_event = parse_system_event(body);
             phase_ = system_event.event_code;
         }
 
-        [[nodiscard]] std::vector<std::uint8_t> watch() const {
+        [[nodiscard]] std::vector<std::uint16_t> watch() const {
             return watch_;
         }
 
@@ -81,6 +97,13 @@ namespace data_feed {
 
     private:
 
+        [[nodiscard]] bool is_wanted(const Ticker& t) const {
+            const std::string_view sv = trim(t);
+            for (const auto& w : wanted_)
+                if (w == sv) return true;
+            return false;
+        }
+
         static std::string_view trim(const Ticker& t) {
             std::size_t n = t.size();
             while (n > 0 && t[n - 1] == ' ') --n;
@@ -88,8 +111,11 @@ namespace data_feed {
         }
 
         BookEngine engine_;
-        std::vector<std::uint8_t> watch_;
-        std::vector<char> state_ = std::vector<char>(65536, 'T');
+        std::vector<std::uint16_t>  watch_;
+        std::vector<std::string>    wanted_;
+        std::vector<Ticker>         locate_to_ticker_;   // Index = stock_locate
+        bool                        directory_ready_ = false;
+        std::vector<char>           state_ =  std::vector<char>(65536, 'T');
         char phase_ = 'O';
         HandlerStats stats_;
     };

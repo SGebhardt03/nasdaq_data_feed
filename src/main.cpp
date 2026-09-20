@@ -49,11 +49,12 @@ void print_book_stats(const data_feed::BookHandler& h) {
               << "  underflow_clamped:   " << bs.underflow_clamped << "\n"
               << "  level_missing:       " << bs.level_missing << "\n"
               << "  book_desync:         " << bs.book_desync << "\n"
-              << "  zero_shares:         " << bs.zero_shares << "\n";
+              << "  zero_shares:         " << bs.zero_shares << "\n"
+              << "  book_crossed:        " << bs.book_crossed << "\n";
 }
 
 void run_book(const std::string& path) {
-    data_feed::BookHandler h{{}};   // leere Watch-Liste = alle Locates
+    data_feed::BookHandler h{{"AAPL"}};//, "MSFT", "SPY", "XYZ"}};   // leere Watch-Liste = alle Locates
 
     data_feed::run_pass(path, h);
 
@@ -64,7 +65,7 @@ void run_book(const std::string& path) {
 
 int main(int argc, char** argv) {
     const std::string mode = argc > 1 ? argv[1] : "stats";
-    const std::string path = argc > 2 ? argv[2] : "data/raw/S112825-v50.txt.gz";
+    const std::string path = argc > 2 ? argv[2] : "data/sample/head100mb.gz";
 
     if (mode != "stats" && mode != "book") {
         std::cerr << "Aufruf: " << argv[0] << " [stats|book] [pfad]\n";

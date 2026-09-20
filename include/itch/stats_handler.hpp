@@ -31,14 +31,14 @@ public:
     }
 
 
-    const std::array<std::uint64_t, 256>& counts() const { return counts_; }
+    [[nodiscard]] const std::array<std::uint64_t, 256>& counts() const { return counts_; }
 
     // locate -> Ticker, Index 0 unused (locates start at 1)
     // Empty ticker possible
-    const std::vector<Ticker>& directory() const { return locate_to_ticker_; }
+    [[nodiscard]] const std::vector<Ticker>& directory() const { return locate_to_ticker_; }
 
 
-    std::size_t watched_count() const {
+    [[nodiscard]] std::size_t watched_count() const {
         std::size_t n = 0;
         for (auto w : watch_) n += w;
         return n;
@@ -75,7 +75,7 @@ public:
         const auto replace_order = parse_order_replace(body);
     }
 
-    [[nodiscard]] std::vector<std::uint8_t> watch() const {
+    [[nodiscard]] std::vector<std::uint16_t> watch() const {
         return watch_;
     }
 
@@ -96,7 +96,7 @@ private:
 
     std::array<std::uint64_t, 256> counts_{};
     std::vector<Ticker>            locate_to_ticker_;   // Index = stock_locate
-    std::vector<std::uint8_t>      watch_;              // Index = stock_locate
+    std::vector<std::uint16_t>      watch_;              // Index = stock_locate
     std::vector<std::string>       wanted_;
     bool                           directory_ready_ = false;
 };

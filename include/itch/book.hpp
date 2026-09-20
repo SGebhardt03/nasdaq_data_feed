@@ -64,6 +64,7 @@ namespace data_feed {
         uint64_t level_missing      = 0; // order exists, price level does not
         uint64_t book_desync        = 0;
         uint64_t zero_shares        = 0;
+        uint64_t book_crossed       = 0;
     };
 
     class BookEngine {
@@ -159,6 +160,19 @@ namespace data_feed {
             remove_order(it);
             add_order(new_ref, locate, side, new_price, new_shares);
         }
+
+        void check_crossed(const Book& book) {
+            const auto bid = book.best_bid();
+            const auto ask = book.best_ask();
+            if (bid && ask && bid->price_ticks >= ask->price_ticks) {
+                ++stats_.book_crossed;
+            }
+        }
+
+        const Book& read_book(uint8_t symbol) {
+            return books_[symbol];
+        }
+
     private:
         std::unordered_map<uint64_t, Order> orders_;
         std::vector<Book> books_;
