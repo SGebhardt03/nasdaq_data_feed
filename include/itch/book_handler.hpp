@@ -14,6 +14,7 @@
 #include "messages.hpp"
 #include "dispatch.hpp"
 #include "book.hpp"
+#include "l1_writer.hpp"
 
 namespace data_feed {
 
@@ -44,12 +45,14 @@ namespace data_feed {
             engine_.add_order(order->order_reference_number, order->locate,
                               order->side, order->price, order->shares);
             this->last_symbol = order->locate;
+            this->last_timestamp = order->timestamp;
         }
         void on_executed(const std::span<const std::byte> body) {
             const auto executed_order = parse_executed_order(body);
             engine_.reduce_order(executed_order.order_reference_number,
                     executed_order.executed_shares);
             this->last_symbol = executed_order.locate;
+            this->last_timestamp = executed_order.timestamp;
             }
 
         void on_cancel(const std::span<const std::byte> body) {
@@ -57,12 +60,14 @@ namespace data_feed {
             engine_.reduce_order(cancel_order.order_reference_number,
                 cancel_order.cancelled_shares);
             this->last_symbol = cancel_order.locate;
+            this->last_timestamp = cancel_order.timestamp;
         }
 
         void on_delete(const std::span<const std::byte> body) {
             const auto delete_order = parse_order_delete(body);
             engine_.delete_order(delete_order.order_reference_number);
             this->last_symbol = delete_order.locate;
+            this->last_timestamp = delete_order.timestamp;
         }
 
         void on_replace(const std::span<const std::byte> body) {
@@ -70,11 +75,19 @@ namespace data_feed {
             engine_.replace_order(replace_order.old_order_reference_number,
                 replace_order.new_order_reference_number, replace_order.price,
                 replace_order.shares);
+            this->last_symbol = replace_order.locate;
+            this->last_timestamp = replace_order.timestamp;
         }
 
         void after_message() {
-                const Book& book = engine_.read_book(this->last_symbol);
-                engine_.check_crossed(book);
+            const Book& book = engine_.read_book(this->last_symbol);
+            engine_.check_crossed(book);
+            if (l1_writer_) {
+                if (const auto& tob = engine_.top_of_book(this->last_symbol); tob != prev_tob_[last_symbol]) {
+                    l1_writer_->emit(last_timestamp, last_symbol, tob);
+                    prev_tob_[last_symbol] = tob;
+                }
+            }
         }
 
         void on_trading_action(const std::span<const std::byte> body) {
@@ -109,7 +122,7 @@ namespace data_feed {
         static std::string_view trim(const Ticker& t) {
             std::size_t n = t.size();
             while (n > 0 && t[n - 1] == ' ') --n;
-            return std::string_view(t.data(), n);
+            return {t.data(), n};
         }
 
         BookEngine engine_;
@@ -119,7 +132,10 @@ namespace data_feed {
         std::vector<char>                   state_ =  std::vector<char>(65536, 'T');
         char                                phase_ = 'O';
         uint16_t                            last_symbol = 0;
+        uint64_t                            last_timestamp = 0;
+        std::array<TopOfBook, 65536>        prev_tob_{};
         HandlerStats                        stats_;
+        L1Writer*                           l1_writer_ = nullptr;
     };
 }
 

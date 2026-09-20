@@ -26,6 +26,15 @@ namespace data_feed {
     struct Level {
         int64_t  price_ticks{};
         uint32_t shares{};
+
+        bool operator==(const Level&) const = default;
+    };
+
+    struct TopOfBook {
+        std::optional<Level> bid;
+        std::optional<Level> ask;
+
+        bool operator==(const TopOfBook&) const = default;
     };
 
     struct Book {
@@ -49,12 +58,6 @@ namespace data_feed {
             return Level{.price_ticks = it->first, .shares = it->second};
         }
         bool empty() const { return bids.empty() && asks.empty(); }
-    };
-
-
-    struct BookDelta {
-        bool top_changed;
-        uint16_t locate;
     };
 
     struct BookStats {
@@ -171,6 +174,10 @@ namespace data_feed {
 
         const Book& read_book(uint16_t symbol) {
             return books_[symbol];
+        }
+
+        TopOfBook top_of_book(uint16_t locate) const {
+            return TopOfBook{.bid = books_[locate].best_bid(), .ask = books_[locate].best_ask()};
         }
 
     private:
