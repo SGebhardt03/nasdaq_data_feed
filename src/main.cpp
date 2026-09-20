@@ -4,17 +4,16 @@
 
 #include "itch/dispatch.hpp"
 #include "itch/stats_handler.hpp"
-#include "../include/itch/stream_reader.hpp"
+
 
 #include <iostream>
-#include <stdexcept>
 #include <string>
 
 namespace {
 
 
 
-void print_type_counts(const data_feed::BookHandler& h) {
+void print_type_counts(const data_feed::StatsHandler& h) {
     std::cout << "Message-type  Count\n";
     for (int t = 0; t < 256; ++t) {
         const auto n = h.counts()[static_cast<std::size_t>(t)];
@@ -30,7 +29,7 @@ int main(int argc, char** argv) {
     const std::string path = argc > 1 ? argv[1] : "data/sample/head100mb.gz";
 
     try {
-        data_feed::BookHandler h{{"AAPL", "MSFT", "SPY", "XYZ"}};
+        data_feed::StatsHandler h{{"AAPL", "MSFT", "SPY", "XYZ"}};
 
         run_pass(path, h);          // Durchlauf 1: Directory
         h.finalize_directory();
