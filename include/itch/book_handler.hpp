@@ -76,6 +76,9 @@ namespace data_feed {
             return phase_;
         }
 
+        [[nodiscard]] const HandlerStats& stats() const { return stats_; }
+        [[nodiscard]] const BookStats& book_stats() const { return engine_.stats(); }
+
     private:
 
         static std::string_view trim(const Ticker& t) {
