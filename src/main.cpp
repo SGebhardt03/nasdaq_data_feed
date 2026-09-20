@@ -28,9 +28,7 @@ void print_type_counts(const data_feed::StatsHandler& h) {
 void run_stats(const std::string& path) {
     data_feed::StatsHandler h{{"AAPL", "MSFT", "SPY", "XYZ"}};
 
-    data_feed::run_pass(path, h);   // Durchlauf 1: Directory
-    h.finalize_directory();
-    data_feed::run_pass(path, h);   // Durchlauf 2: gefiltert
+    data_feed::run_pass(path, h);
 
     print_type_counts(h);
     std::cout << "beobachtete Symbole aus Watchlist: " << h.watched_count()

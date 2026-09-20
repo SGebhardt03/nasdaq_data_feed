@@ -28,11 +28,11 @@ namespace data_feed {
         switch (type) {
             case 'A': case 'F': handler.on_add_order(body);      break;
             case 'E':           handler.on_executed(body);       break;
-            case 'C':           handler.on_executed(body); break;
+            case 'C':           handler.on_executed(body);       break;
             case 'X':           handler.on_cancel(body);         break;
             case 'D':           handler.on_delete(body);         break;
             case 'U':           handler.on_replace(body);        break;
-            case 'H':           break;
+            case 'H':                                            break;
             case 'P': case 'Q': handler.on_trade(body);          break;
             default: break;
         }

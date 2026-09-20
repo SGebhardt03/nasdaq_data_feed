@@ -22,15 +22,6 @@ public:
     explicit StatsHandler(std::vector<std::string> watchlist)
     : wanted_(std::move(watchlist)) {}
 
-    // Zwischen den beiden Durchlaeufen aufzurufen, wenn alle 'R' durch sind.
-    void finalize_directory() {
-        watch_.assign(locate_to_ticker_.size(), 0);
-        for (std::size_t i = 0; i < locate_to_ticker_.size(); ++i)
-            watch_[i] = static_cast<std::uint8_t>(is_wanted(locate_to_ticker_[i]));
-        directory_ready_ = true;
-    }
-
-
     [[nodiscard]] const std::array<std::uint64_t, 256>& counts() const { return counts_; }
 
     // locate -> Ticker, Index 0 unused (locates start at 1)
@@ -45,7 +36,7 @@ public:
     }
 
     void on_any(char type) {
-        if (!directory_ready_) ++counts_[static_cast<unsigned char>(type)];
+        ++counts_[static_cast<unsigned char>(type)];
     }
 
     void on_stock_directory(std::span<const std::byte> body) {
@@ -53,6 +44,7 @@ public:
         if (sd.locate >= locate_to_ticker_.size())
             locate_to_ticker_.resize(sd.locate + 1);
         locate_to_ticker_[sd.locate] = sd.stock;
+        watch_[sd.locate] = static_cast<std::uint8_t>(is_wanted(sd.stock));
     }
 
     void on_add_order(std::span<const std::byte> body) {
@@ -75,7 +67,7 @@ public:
         const auto replace_order = parse_order_replace(body);
     }
 
-    [[nodiscard]] std::vector<std::uint16_t> watch() const {
+    [[nodiscard]] const std::array<std::uint8_t, 65536>& watch() const {
         return watch_;
     }
 
@@ -94,11 +86,10 @@ private:
         return std::string_view(t.data(), n);
     }
 
-    std::array<std::uint64_t, 256> counts_{};
-    std::vector<Ticker>            locate_to_ticker_;   // Index = stock_locate
-    std::vector<std::uint16_t>      watch_;              // Index = stock_locate
-    std::vector<std::string>       wanted_;
-    bool                           directory_ready_ = false;
+    std::array<std::uint64_t, 256>  counts_{};
+    std::vector<Ticker>             locate_to_ticker_;   // Index = stock_locate
+    std::array<std::uint8_t, 65536> watch_{};           // Index = stock_locate
+    std::vector<std::string>        wanted_;
 };
 
 }  // namespace data_feed
