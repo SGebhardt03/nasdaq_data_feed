@@ -169,7 +169,7 @@ namespace data_feed {
             }
         }
 
-        const Book& read_book(uint8_t symbol) {
+        const Book& read_book(uint16_t symbol) {
             return books_[symbol];
         }
 

@@ -43,22 +43,26 @@ namespace data_feed {
             }
             engine_.add_order(order->order_reference_number, order->locate,
                               order->side, order->price, order->shares);
+            this->last_symbol = order->locate;
         }
         void on_executed(const std::span<const std::byte> body) {
             const auto executed_order = parse_executed_order(body);
             engine_.reduce_order(executed_order.order_reference_number,
                     executed_order.executed_shares);
+            this->last_symbol = executed_order.locate;
             }
 
         void on_cancel(const std::span<const std::byte> body) {
             const auto cancel_order = parse_order_cancel(body);
             engine_.reduce_order(cancel_order.order_reference_number,
                 cancel_order.cancelled_shares);
+            this->last_symbol = cancel_order.locate;
         }
 
         void on_delete(const std::span<const std::byte> body) {
             const auto delete_order = parse_order_delete(body);
             engine_.delete_order(delete_order.order_reference_number);
+            this->last_symbol = delete_order.locate;
         }
 
         void on_replace(const std::span<const std::byte> body) {
@@ -68,14 +72,10 @@ namespace data_feed {
                 replace_order.shares);
         }
 
-        // TODO: Only check Symbol of last message
-        // void after_message() {
-        //     for (const std::uint8_t& w : watch_) {
-        //         const Book& book = engine_.read_book(w);
-        //         engine_.check_crossed(book);
-        //     }
-        //
-        // }
+        void after_message() {
+                const Book& book = engine_.read_book(this->last_symbol);
+                engine_.check_crossed(book);
+        }
 
         void on_trading_action(const std::span<const std::byte> body) {
             const auto system_event = parse_system_event(body);
@@ -118,6 +118,7 @@ namespace data_feed {
         std::vector<Ticker>         locate_to_ticker_;   // Index = stock_locate
         std::vector<char>           state_ =  std::vector<char>(65536, 'T');
         char phase_ = 'O';
+        uint16_t last_symbol = 0;
         HandlerStats stats_;
     };
 }
