@@ -40,11 +40,12 @@ namespace data_feed {
     }
 
 
-    // Liest die Datei einmal komplett per StreamReader und speist jede
-    // Nachricht in den Handler ein. Eine Dev-Sample-Datei (z. B.
-    // data/sample/head100mb.gz) ist per Konstruktion mitten im gzip-Stream
-    // abgeschnitten -- StreamReader wirft dann beim letzten, unvollstaendigen
-    // Frame. Das ist hier kein Fehler, sondern das erwartete Ende der Probe.
+    // Reads the file once, completely, via StreamReader and feeds every
+    // message into the handler. A dev-sample file (e.g.
+    // data/sample/head100mb.gz) is, by construction, cut off in the middle
+    // of the gzip stream -- StreamReader then throws on the last,
+    // incomplete frame. That's not an error here, just the expected end of
+    // the sample.
     template <class H>
     void run_pass(const std::string& path, H& handler) {
         df::StreamReader reader(path);
@@ -55,9 +56,9 @@ namespace data_feed {
                 dispatch(msg, handler);
             }
         } catch (const std::runtime_error& e) {
-            std::cerr << "Hinweis: " << e.what()
-                      << " -- vermutlich abgeschnittene Dev-Sample-Datei; "
-                         "Statistik basiert auf den bis dahin gelesenen Nachrichten.\n";
+            std::cerr << "Note: " << e.what()
+                      << " -- likely a truncated dev-sample file; "
+                         "statistics are based on the messages read so far.\n";
         }
     }
 

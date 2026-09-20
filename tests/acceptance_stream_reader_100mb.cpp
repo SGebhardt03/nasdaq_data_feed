@@ -1,15 +1,15 @@
-// Abnahmetest: "Programm liest 100 MB durch, ohne zu crashen, und zaehlt
-// Bytes korrekt."
+// Acceptance test: "Program reads through 100 MB without crashing, and
+// counts bytes correctly."
 //
-// Liest die komplette Fixture ueber df::StreamReader::next() ein und
-// vergleicht die dabei selbst gezaehlten Bytes/Nachrichten gegen eine extern
-// (unabhaengig von diesem Code) ermittelte Ground Truth aus einer
-// Begleitdatei. Siehe tests/fixtures/itch_100mb.expected fuer die Herkunft
-// der Referenzwerte.
+// Reads the complete fixture via df::StreamReader::next() and compares
+// the self-counted bytes/messages against a ground truth determined
+// externally (independent of this code) from a companion file. See
+// tests/fixtures/itch_100mb.expected for the origin of the reference
+// values.
 //
-// Aufruf: acceptance_stream_reader_100mb <fixture.gz> <expected.txt>
-// Exit 0 = bestanden, Exit 1 = kontrolliert fehlgeschlagen (kein Crash),
-// Exit 2 = falscher Aufruf.
+// Usage: acceptance_stream_reader_100mb <fixture.gz> <expected.txt>
+// Exit 0 = passed, exit 1 = failed in a controlled way (no crash),
+// exit 2 = wrong invocation.
 
 #include "itch/endian.hpp"
 #include "../include/itch/stream_reader.hpp"
@@ -76,36 +76,37 @@ int main(int argc, char** argv) {
         std::chrono::steady_clock::now() - start).count();
     const double mib = static_cast<double>(own_bytes) / (1024.0 * 1024.0);
 
-    std::cout << "gelesen:     " << own_bytes << " Bytes, " << own_messages
-              << " Nachrichten in " << elapsed << " s ("
+    std::cout << "read:        " << own_bytes << " bytes, " << own_messages
+              << " messages in " << elapsed << " s ("
               << (mib / elapsed) << " MiB/s)\n";
 
     auto check = [&](const char* what, std::uint64_t got, std::uint64_t want) {
       if (got != want) {
-        std::cerr << "FEHLER: " << what << " stimmt nicht: gelesen=" << got
-                  << " erwartet(ground truth)=" << want << "\n";
+        std::cerr << "ERROR: " << what << " mismatch: got=" << got
+                  << " expected(ground truth)=" << want << "\n";
         ok = false;
       }
     };
 
-    // Interner Selbstcheck: eigene Zaehlung muss mit dem vom Reader
-    // gefuehrten Byte-Offset uebereinstimmen.
-    check("eigene Bytezaehlung vs. reader.offset()", own_bytes,
+    // Internal self-check: our own count must match the byte offset
+    // tracked by the reader.
+    check("own byte count vs. reader.offset()", own_bytes,
           reader.offset());
 
-    // Externer Cross-Check gegen die unabhaengig ermittelte Ground Truth.
-    check("dekomprimierte Bytes vs. Ground Truth", own_bytes, expected_bytes);
-    check("Nachrichtenanzahl vs. Ground Truth", own_messages,
+    // External cross-check against the independently determined ground
+    // truth.
+    check("decompressed bytes vs. ground truth", own_bytes, expected_bytes);
+    check("message count vs. ground truth", own_messages,
           expected_messages);
 
     if (own_bytes < kMinDecompressedBytes) {
-      std::cerr << "FEHLER: nur " << own_bytes << " Bytes gelesen, "
-                << "Abnahmekriterium verlangt >= " << kMinDecompressedBytes
-                << " Bytes\n";
+      std::cerr << "ERROR: only " << own_bytes << " bytes read, "
+                << "acceptance criterion requires >= " << kMinDecompressedBytes
+                << " bytes\n";
       ok = false;
     }
   } catch (const std::exception& e) {
-    std::cerr << "FEHLGESCHLAGEN (kontrolliert abgefangen, kein Crash): "
+    std::cerr << "FAILED (caught in a controlled way, no crash): "
               << e.what() << "\n";
     return 1;
   }

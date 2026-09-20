@@ -108,7 +108,7 @@ class StreamReader {
     return msg;
   }
 
-  // Byte-Offset im *dekomprimierten* Stream — fuer Fehlermeldungen/Progress.
+  // Byte offset in the *decompressed* stream -- for error messages/progress.
   [[nodiscard]] std::uint64_t offset() const noexcept { return consumed_; }
 
  private:

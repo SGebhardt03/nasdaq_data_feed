@@ -1,10 +1,10 @@
-// itch_stat: liest eine ITCH-5.0-Datei (gzip) ueber df::StreamReader.
+// itch_stat: reads an ITCH-5.0 file (gzip) via df::StreamReader.
 //
-// Aufruf: itch_stat [stats|book] [pfad]
-//   stats: StatsHandler, zwei Durchlaeufe (Directory, dann gefiltert nach
-//          Watchlist) -> Message-Typ -> Count Tabelle.
-//   book:  BookHandler, ein Durchlauf ueber alle Symbole; am Ende werden
-//          die Handler- und Book-Statistiken ausgegeben.
+// Usage: itch_stat [stats|book] [path]
+//   stats: StatsHandler, two passes (directory, then filtered by
+//          watchlist) -> message-type -> count table.
+//   book:  BookHandler, one pass over all symbols; at the end the
+//          handler and book statistics are printed.
 
 #include "itch/book_handler.hpp"
 #include "itch/dispatch.hpp"
@@ -31,17 +31,17 @@ void run_stats(const std::string& path) {
     data_feed::run_pass(path, h);
 
     print_type_counts(h);
-    std::cout << "beobachtete Symbole aus Watchlist: " << h.watched_count()
-              << " / " << h.directory().size() << " Locates\n";
+    std::cout << "watched symbols from watchlist: " << h.watched_count()
+              << " / " << h.directory().size() << " locates\n";
 }
 
 void print_book_stats(const data_feed::BookHandler& h) {
     const auto& hs = h.stats();
     const auto& bs = h.book_stats();
-    std::cout << "Handler-Statistik\n"
+    std::cout << "Handler statistics\n"
               << "  malformed_messages:  " << hs.malformed_messages << "\n"
               << "  unknown_references:  " << hs.unknown_references << "\n"
-              << "Book-Statistik\n"
+              << "Book statistics\n"
               << "  duplicate_ref:       " << bs.duplicate_ref << "\n"
               << "  unknown_ref:         " << bs.unknown_ref << "\n"
               << "  underflow_clamped:   " << bs.underflow_clamped << "\n"
@@ -52,7 +52,7 @@ void print_book_stats(const data_feed::BookHandler& h) {
 }
 
 void run_book(const std::string& path) {
-    data_feed::BookHandler h{{"AAPL"}};//, "MSFT", "SPY", "XYZ"}};   // leere Watch-Liste = alle Locates
+    data_feed::BookHandler h{{"AAPL"}};//, "MSFT", "SPY", "XYZ"}};   // empty watch list = all locates
 
     data_feed::run_pass(path, h);
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     const std::string path = argc > 2 ? argv[2] : "data/raw/S112825-v50.txt.gz";
 
     if (mode != "stats" && mode != "book") {
-        std::cerr << "Aufruf: " << argv[0] << " [stats|book] [pfad]\n";
+        std::cerr << "usage: " << argv[0] << " [stats|book] [path]\n";
         return 2;
     }
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
         if (mode == "stats") run_stats(path);
         else                 run_book(path);
     } catch (const std::exception& e) {
-        std::cerr << "FEHLER: " << e.what() << "\n";
+        std::cerr << "ERROR: " << e.what() << "\n";
         return 1;
     }
     return 0;

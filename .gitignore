@@ -12,3 +12,6 @@ sample_head.gz
 sample_head.itch
 
 tests/fixtures/*
+
+docs/
+.idea/

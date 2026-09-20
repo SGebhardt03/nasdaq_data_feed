@@ -16,10 +16,10 @@
 
 namespace data_feed {
 
-    // Schreibt bei jeder Top-of-Book-Aenderung eine CSV-Zeile
-    // (ts_ns,locate,bid_px,bid_sz,ask_px,ask_sz) in eine Datei pro Locate.
-    // Preise sind rohe Ticks; eine fehlende Seite (kein Bid/Ask) ergibt
-    // ein leeres Feld statt einer Zahl.
+    // Writes a CSV line (ts_ns,locate,bid_px,bid_sz,ask_px,ask_sz) to a
+    // per-locate file on every top-of-book change. Prices are raw ticks;
+    // a missing side (no bid/ask) yields an empty field instead of a
+    // number.
     class L1Writer {
     public:
         explicit L1Writer(std::filesystem::path dir, std::size_t flush_threshold = 1u << 16)
@@ -83,7 +83,7 @@ namespace data_feed {
                               std::ios::out | std::ios::trunc);
             if (!file.stream) {
                 throw std::runtime_error(
-                    "L1Writer: kann Datei fuer locate " + std::to_string(locate) + " nicht oeffnen");
+                    "L1Writer: cannot open file for locate " + std::to_string(locate));
             }
             file.buffer.reserve(flush_threshold_ + 256);
             return files_.emplace(locate, std::move(file)).first->second;
