@@ -61,9 +61,21 @@ void run_book(const std::string& path) {
 
 }  // namespace
 
+void run_writer(const std::string& path, const std::string& output_path) {
+
+    data_feed::L1Writer writer{output_path};
+    data_feed::BookHandler h{{"AAPL"}};//, "MSFT", "SPY", "XYZ"}};   // empty watch list = all locates
+
+    h.set_writer(writer);
+
+    data_feed::run_pass(path, h);
+    print_book_stats(h);
+}
+
 int main(int argc, char** argv) {
-    const std::string mode = argc > 1 ? argv[1] : "stats";
+    const std::string mode = argc > 1 ? argv[1] : "book";
     const std::string path = argc > 2 ? argv[2] : "data/raw/S112825-v50.txt.gz";
+    const std::string output_path = argc > 3 ? argv[3] : "output/";
 
     if (mode != "stats" && mode != "book") {
         std::cerr << "usage: " << argv[0] << " [stats|book] [path]\n";
@@ -72,7 +84,8 @@ int main(int argc, char** argv) {
 
     try {
         if (mode == "stats") run_stats(path);
-        else                 run_book(path);
+        if (mode == "books" && argc == 2) run_book(path);
+        else                 run_writer(path, output_path);
     } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << "\n";
         return 1;

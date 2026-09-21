@@ -95,6 +95,10 @@ namespace data_feed {
             phase_ = system_event.event_code;
         }
 
+        void set_writer(L1Writer& writer) {
+            this->l1_writer_ = &writer;
+        }
+
         [[nodiscard]] const std::array<std::uint8_t, 65536>& watch() const {
             return watch_;
         }
