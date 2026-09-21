@@ -1,13 +1,16 @@
 // itch_stat: reads an ITCH-5.0 file (gzip) via df::StreamReader.
 //
-// Usage: itch_stat [stats|book] [path]
+// Usage: itch_stat [stats|book] [path] [output_dir]
 //   stats: StatsHandler, two passes (directory, then filtered by
 //          watchlist) -> message-type -> count table.
-//   book:  BookHandler, one pass over all symbols; at the end the
-//          handler and book statistics are printed.
+//   book:  BookHandler, one pass over the watched symbols; at the end
+//          the handler and book statistics are printed. If output_dir
+//          is given, top-of-book changes are also written there as
+//          per-locate L1 CSV files.
 
 #include "itch/book_handler.hpp"
 #include "itch/dispatch.hpp"
+#include "itch/l1_writer.hpp"
 #include "itch/stats_handler.hpp"
 
 #include <iostream>
@@ -59,10 +62,7 @@ void run_book(const std::string& path) {
     print_book_stats(h);
 }
 
-}  // namespace
-
 void run_writer(const std::string& path, const std::string& output_path) {
-
     data_feed::L1Writer writer{output_path};
     data_feed::BookHandler h{{"AAPL"}};//, "MSFT", "SPY", "XYZ"}};   // empty watch list = all locates
 
@@ -72,20 +72,22 @@ void run_writer(const std::string& path, const std::string& output_path) {
     print_book_stats(h);
 }
 
+}  // namespace
+
 int main(int argc, char** argv) {
     const std::string mode = argc > 1 ? argv[1] : "book";
     const std::string path = argc > 2 ? argv[2] : "data/raw/S112825-v50.txt.gz";
-    const std::string output_path = argc > 3 ? argv[3] : "output/";
+    const std::string output_path = argc > 3 ? argv[3] : "";
 
     if (mode != "stats" && mode != "book") {
-        std::cerr << "usage: " << argv[0] << " [stats|book] [path]\n";
+        std::cerr << "usage: " << argv[0] << " [stats|book] [path] [output_dir]\n";
         return 2;
     }
 
     try {
-        if (mode == "stats") run_stats(path);
-        if (mode == "books" && argc == 2) run_book(path);
-        else                 run_writer(path, output_path);
+        if (mode == "stats")      run_stats(path);
+        else if (argc > 3)        run_writer(path, output_path);
+        else                      run_book(path);
     } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << "\n";
         return 1;
